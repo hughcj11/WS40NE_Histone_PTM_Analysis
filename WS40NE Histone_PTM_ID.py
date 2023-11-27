@@ -35,9 +35,15 @@ with open(base_path+"CellhPTMs_Unimod.csv") as csvfile:
         #The below code removes any mass shifts that are not unimods, which appear in the Skyline data in brackets [].
         pattern = '\[.*\]'
         result = re.search(pattern, pep_seq)
-        if result!=None:
-            pep_seq=pep_seq.replace(result.group(),"")
+        while result!=None:
+            if result.group() =="[GLu-C_ubiq]":
+                pep_seq=pep_seq.replace(result.group(),"(unimod:121)")
+            else:
+                pep_seq=pep_seq.replace(result.group(),"")
+            result = re.search(pattern, pep_seq)
         last_amino=""
+
+        
         #unimod refers to the type of modifcation 
         #mod_amino refers to the residue being modified 
         #mod_pos refers to the position in that seqeunce being modified
@@ -202,7 +208,15 @@ with open(base_path+'UniqueUnimodLibrary.csv', 'w') as csvfile:
     cellwriter.writerow(["unimod+residue"])
     uniqueunimod=set(uniqueunimod)
     for uniquemod in uniqueunimod:
-        cellwriter.writerow([uniquemod])  
+        cellwriter.writerow([uniquemod]) 
+
+#The below document is a list of the unique residues that were modified. 
+with open(base_path+'UniqueResidueLibrary.csv', 'w') as csvfile:
+    cellwriter = csv.writer(csvfile, delimiter=',')
+    cellwriter.writerow(["Amino Acid"])
+    aa=set(aa)
+    for uniqueaa in aa:
+        cellwriter.writerow([uniqueaa])   
 
 #The below document is a version of the HistonePTMLibrary with only the biologically relevant modifications included
 with open(base_path+'BioRelevantHistonePTMLibrary.csv', 'w') as csvfile:

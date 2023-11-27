@@ -40,6 +40,7 @@ library(cowplot)
 library(cluster)
 library(factoextra)
 library(stringr)
+library(ggforce)
 
 
 
@@ -48,10 +49,10 @@ library(stringr)
 
 # Loading the data
 
-imported_beta_values <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculation for Embryo Samples/Full_Beta_Values.csv")
-imported_relative_abundance <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculation for Embryo Samples/Full_Relative_Abundance.csv")
-imported_M_values <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculation for Embryo Samples/Full_M_Values.csv")
-meta_data <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculation for Embryo Samples/Meta Data.csv")
+imported_beta_values <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Beta_Values.csv")
+imported_relative_abundance <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Relative_Abundance.csv")
+imported_M_values <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_M_Values.csv")
+meta_data <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Meta Data.csv")
 # Checking that the structure of the imported files is correct. All beta values and relative abundance values should be reported as "numeric" rather than "character"
 
 str(imported_beta_values)
@@ -88,7 +89,7 @@ colors18_2 <- c("#670571", "#d29eef", "#6799cc", "#6cc2b2", "#211259", "#127834"
 # Colors for PCA, volcano plots, and pie chart
 
 colors3 <- c("#b33e52", "#78b33e", "#3e9fb3")
-colors18_3 <- colors18[c(8,11,15)]
+colors18_3 <- colors18[c(8,11,15,12)]
 colors7 <- c("#54990f", "#a3cc7a", "#0f8299", "#7abecc", "#990f26", "#cc7a88", "#653eb3")
 colors_volcano <- colors18[c(2,11,8,17)]
 
@@ -164,13 +165,17 @@ Data$MValue <- as.numeric(Data$MValue)
 # Subsetting the Data 
 
 
-Exp_Data_Anoxic <- Data %>% 
-  filter(Condition == "Anoxic")
+Exp_Data_Recovery <- Data %>% 
+  filter(Condition == "Recovery")
 
 Exp_Data_Normoxic <- Data %>% 
   filter(Condition == "Normoxic")
 
+Exp_Data_24h_Anoxia <- Data %>% 
+  filter(Condition == "24h Anoxia")
 
+Exp_Data_4d_Anoxia <- Data %>% 
+  filter(Condition == "4d Anoxia")
 
 #Extracting list of PTMs (PTM description)
 
@@ -185,44 +190,6 @@ rep_str = c('GlyGly' = 'Ubiquityl')
 Data$`PTM Description` <- str_replace_all(Data$`PTM Description`, rep_str) 
 
 
-# Individual Accession - Histone PTM Maps
-## H2A.V (XP_013854970.1)
-## H1-like (XP_013855658.1)
-## H2B_1/2-like (XP_013857090.1)
-## H2A.Z (XP_013858796.1)
-## H2A (XP_013874651.1)
-## H2A-like (XP_013878193.1)
-## H1-like (XP_013878240.1)
-## H2A-like (XP_013879560.1)
-## H2B_1/2 (XP_013879561.1)
-## H1-like (XP_013879563.1)
-## H3-like (XP_013879564.1)
-## H2B.L4-like (XP_013885354.1)
-## H3.3 (XP_013887037.1)
-## H2AX-like (XP_013887205.1)
-
-#H1
-## H1-like (XP_013879563.1)
-## H1-like (XP_013878240.1)
-## H1-like (XP_013855658.1)
-
-#H2A
-## H2AX-like (XP_013887205.1)
-## H2A-like (XP_013879560.1)
-## H2A-like (XP_013878193.1)
-## H2A (XP_013874651.1)
-## H2A.Z (XP_013858796.1)
-## H2A.V (XP_013854970.1)
-
-#H2B
-## H2B.L4-like (XP_013885354.1)
-## H2B_1/2 (XP_013879561.1)
-## H2B_1/2-like (XP_013857090.1)
-
-#H3
-## H3.3 (XP_013887037.1)
-## H3-like (XP_013879564.1)
-
 #Extracting list of all histone proteins in the data frame
 
 unique(Data$`Protein Description`)
@@ -233,11 +200,17 @@ unique(Data$`Protein Description`)
 
 #Making hPTM maps for each histone
 
-colors_H1 <- colors18[c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18)]my_histone <- Data[c(2:3)]##my_histone <- unique(my_histone)my_histone_xp <- (unique(my_histone[, c(1,2)]))i=2for (i in 1:length(my_histone_xp$`Protein Accession`)){                     H1_Maps <- Data %>%                      filter(`Protein Accession` == my_histone_xp$`Protein Accession`[i]) %>%                      arrange(Position) %>%                      mutate(abbreviation = case_when(Condition == "Anoxic" ~ "A", Condition == "Normoxic" ~ "N"))                                                                                               #Detail_H1_Maps <- H1_Maps[ , c(14, 1:8)]
- 		   Detail_H1_Maps <- H1_Maps[ , c(14, 15, 1:8)]                                      Summary_H1_Maps <- H1_Maps %>%                      group_by(abbreviation, Condition, hPTM_Name) %>%                      summarize(mean_Relative_Abundance = mean(Relative_Abundance))                                      Full_H1_Maps <- left_join(Summary_H1_Maps, Detail_H1_Maps, by = c("hPTM_Name","Condition"))                   Full_H1_Maps <- Full_H1_Maps[!duplicated(Full_H1_Maps), ]                                                         Full_H1_Maps <- Full_H1_Maps %>%                      arrange(Position)                                      order <- unique(Full_H1_Maps$`Amino Acid + Position`)                                      Full_H1_Maps$`Amino Acid + Position` <- factor(Full_H1_Maps$`Amino Acid + Position`, levels= order )                                                        Unique_title <- paste(as.character(my_histone_xp$`Protein Accession`[i]), as.character(my_histone_xp$`Protein Description`[i]), sep=" ")                                                                  H1_map <- ggplot(Full_H1_Maps, aes(fill = `PTM Description`, y = mean_Relative_Abundance, x = abbreviation)) +                     geom_bar(position = "stack", stat = "identity") +                     facet_wrap(~ `Amino Acid + Position`, scales = "free", ncol = 6) +                     ggtitle(Unique_title) +                     xlab("Condition") +                     ylab("Average Relative \nAbundance (%)") +                     scale_fill_manual(values = colors_H1) +                     theme_bw() +                     theme(plot.title = element_text(color = "black", size = 12, face = "bold")) +                     theme(strip.text.x = element_text(size = 10))                    print(H1_map)
+colors_H1 <- colors18[c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18)]my_histone <- Data[c(2:3)]##my_histone <- unique(my_histone)my_histone_xp <- (unique(my_histone[, c(1,2)]))i=2
+colors_loop <- setNames(colors_H1,unique(Data$`PTM Description`))
+for (i in 1:length(my_histone_xp$`Protein Accession`)){                     H1_Maps <- Data %>%                      filter(`Protein Accession` == my_histone_xp$`Protein Accession`[i]) %>%                      arrange(Position) %>%                      mutate(abbreviation = case_when(Condition == "4d Anoxia" ~ "4d",Condition == "24h Anoxia" ~ "24h", Condition == "Normoxic" ~ "N",  Condition == "Recovery" ~ "R"))                                                                                               #Detail_H1_Maps <- H1_Maps[ , c(14, 1:8)]
+ 		   Detail_H1_Maps <- H1_Maps[ , c(14, 15, 1:8)]                                      Summary_H1_Maps <- H1_Maps %>%                      group_by(abbreviation, Condition, hPTM_Name) %>%                      summarize(mean_Relative_Abundance = mean(Relative_Abundance))                                      Full_H1_Maps <- left_join(Summary_H1_Maps, Detail_H1_Maps, by = c("hPTM_Name","Condition"))                   Full_H1_Maps <- Full_H1_Maps[!duplicated(Full_H1_Maps), ]                                                         Full_H1_Maps <- Full_H1_Maps %>%                      arrange(Position)                                      order <- unique(Full_H1_Maps$`Amino Acid + Position`)                                      Full_H1_Maps$`Amino Acid + Position` <- factor(Full_H1_Maps$`Amino Acid + Position`, levels= order )                                                        Unique_title <- paste(as.character(my_histone_xp$`Protein Accession`[i]), as.character(my_histone_xp$`Protein Description`[i]), sep=" ")                                                                  H1_map <- ggplot(Full_H1_Maps, aes(fill = `PTM Description`, y = mean_Relative_Abundance, x = abbreviation)) +                     geom_bar(position = "stack", stat = "identity") +		     facet_wrap_paginate(~`Amino Acid + Position`, scales = "free", ncol = 6, nrow = 6) +
+                     ggtitle(Unique_title) +                     xlab("Condition") +                     ylab("Average Relative \nAbundance (%)") +                     scale_fill_manual(values = colors_loop) +                     theme_bw() +                     theme(plot.title = element_text(color = "black", size = 12, face = "bold")) +                     theme(strip.text.x = element_text(size = 10)) +
+		     theme(aspect.ratio=1) 
+                   #H1_map <- H1_map + facet_wrap(vars(fl))
+#grid.arrange
+#get grid extra library
+#ggarrange print(H1_map)
 } 
-
-
 
 
 
@@ -250,15 +223,15 @@ MValues <- imported_M_values
 MValues <- MValues %>% 
   mutate(hPTM_Name = paste(MValues$`Protein Description`, MValues$`Amino Acid + Position`, MValues$`PTM Description`))
 
-MValues <- MValues[,c(21,9:20)]
+MValues <- MValues[,c(57,9:56)]
 
 Transposed_MValues <- as.data.frame(t(MValues))
 
-write_csv(Transposed_MValues, file = "/Users/chelseahughes/Desktop/Histone Analysis/Calculation for Embryo Samples/Transposed_MValues1.csv")
+write_csv(Transposed_MValues, file = "/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Transposed_MValues1.csv")
 
 #At this point, Transposed_MValues2 needs to be manually made from Transposed_MValues1. All you need to do is add a "Sample" Column
 
-PCA_Data1 <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculation for Embryo Samples/Transposed_MValues2.csv")
+PCA_Data1 <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Transposed_MValues2.csv")
 
 PCA_Data1 <- left_join(meta_data, PCA_Data1, by = "Sample")
 PCA_Data1$Condition <- as.factor(PCA_Data1$Condition)
@@ -296,6 +269,149 @@ PCA_Plot <- ggplot(Plotting_PCA, aes(PC1, PC2, col = Condition, fill = Condition
 
 print(PCA_Plot)
 
+
+
+
+
+
+
+
+# Volcano plots of different conditions
+
+## Histone H1
+
+### Anoxic vs Recovery
+
+```{r}
+Gills_Kidney$`Adjusted pvalue` <- as.numeric(Gills_Kidney$`Adjusted pvalue`)
+Gills_Kidney <- Gills_Kidney %>% 
+  filter(Log2FC != 0)
+
+Exp2_Gills_Kidney_Statistics <- Gills_Kidney %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H1.0-B" |
+           `Protein Description` == "protamine-like protein" |
+           `Protein Description` == "H1.10" |
+           `Protein Description` == "H1" |
+           `Protein Description` == "H1-like" |
+           `Protein Description` == "H1 isoform X1"
+  )
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+Exp2_Gills_Kidney_Statistics$Key <- factor(Exp2_Gills_Kidney_Statistics$Key, levels= order )
+
+Volcano_Plot_Gills_Kidney_H1 <- ggplot(data=Exp2_Gills_Kidney_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_Gills_Kidney_H1)
+```
+
+
+### Gills vs Testes
+
+```{r}
+Gills_Testes$`Adjusted pvalue` <- as.numeric(Gills_Testes$`Adjusted pvalue`)
+Gills_Testes <- Gills_Testes %>% 
+  filter(Log2FC != 0)
+
+Exp2_Gills_Testes_Statistics <- Gills_Testes %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H1.0-B" |
+           `Protein Description` == "protamine-like protein" |
+           `Protein Description` == "H1.10" |
+           `Protein Description` == "H1" |
+           `Protein Description` == "H1-like" |
+           `Protein Description` == "H1 isoform X1"
+  )
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+Exp2_Gills_Testes_Statistics$Key <- factor(Exp2_Gills_Testes_Statistics$Key, levels= order )
+
+Volcano_Plot_Gills_Testes_H1 <- ggplot(data=Exp2_Gills_Testes_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_Gills_Testes_H1)
+```
+
+
+### Kidney vs Testes
+
+```{r}
+Kidney_Testes$`Adjusted pvalue` <- as.numeric(Kidney_Testes$`Adjusted pvalue`)
+Kidney_Testes <- Kidney_Testes %>% 
+  filter(Log2FC != 0)
+
+Exp2_Kidney_Testes_Statistics <- Kidney_Testes %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H1.0-B" |
+           `Protein Description` == "protamine-like protein" |
+           `Protein Description` == "H1.10" |
+           `Protein Description` == "H1" |
+           `Protein Description` == "H1-like" |
+           `Protein Description` == "H1 isoform X1"
+  )
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+Exp2_Kidney_Testes_Statistics$Key <- factor(Exp2_Kidney_Testes_Statistics$Key, levels= order )
+
+Volcano_Plot_Kidney_Testes_H1 <- ggplot(data=Exp2_Kidney_Testes_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=c("#990f26", "#3e9fb3", "#666666")) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")")) 
+
+print(Volcano_Plot_Kidney_Testes_H1)
+```
+
+
+#### Compiled Volcano Plots
+
+```{r}
+panel_volcano_plot_H1 <- plot_grid(Volcano_Plot_Gills_Kidney_H1, Volcano_Plot_Gills_Testes_H1, Volcano_Plot_Kidney_Testes_H1, ncol=1, nrow = 3, labels = c('B', 'C', 'D'), label_size = 12)
+
+print(panel_volcano_plot_H1)
 
 
 
