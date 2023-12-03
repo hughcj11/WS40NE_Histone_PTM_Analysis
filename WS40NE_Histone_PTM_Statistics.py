@@ -3,6 +3,7 @@ import csv
 import re
 import numpy as np
 from pandas import read_csv
+import pandas as pd
 from scipy.stats import f_oneway
 from scipy.stats import ttest_rel
 from scipy.stats import ttest_ind
@@ -51,11 +52,11 @@ datastats.to_csv(base_path+'/WS40NE Anoxia Total PTM.csv', index=False)
 #The below code performs statistics on the relative abundance data for each unique hPTM (residue,PTM,and histone)
 #data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Relative_Abundance.csv",header=0)
 #datastats= data.iloc[:,0:8]
-#datastats["Normoxic_Average"]=data.iloc[:,8:14].mean(axis=1)
-#datastats["Anoxic_Average"]=data.iloc[:,14:20].mean(axis=1)
+#datastats["Normoxic_Average"]=data.iloc[:,1:49].mean(axis=1)
+#datastats["Anoxic_Average"]=data.iloc[:,58:106].mean(axis=1)
 #datastats['log2FC'] = np.log2(datastats['Anoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
-# datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:14],data.iloc[:,14:20],axis=1)
-#datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data.iloc[:,8:14], data.iloc[:,14:20],axis=1)
+# datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:14],data.iloc[:,58:106],axis=1)
+#datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data.iloc[:,8:14], data.iloc[:,58:106],axis=1)
 #datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
 #datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
 
@@ -74,3 +75,92 @@ datastats.to_csv(base_path+'/WS40NE Anoxia Total PTM.csv', index=False)
 #datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
 #datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
 #datastats.to_csv(base_path+'/DatastatsGlobal.csv', index=False)
+
+#The below document shows the relative coverage of each modifiable residue (a residue shown as capable of having a PTM). For example, how often K covered by PTMs?
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate calculations.csv",header=0)
+datastats= pd.DataFrame()
+Normoxic_Average=[]
+LTAnoxic_Average=[]
+STAnoxic_Average=[]
+Recovery_Average=[]
+GroupedAATotal=data.drop_duplicates('Amino Acid + Position')
+GroupedAA=data.groupby(['Amino Acid']).sum().reset_index()
+datastats['Amino Acid']=GroupedAA['Amino Acid']
+GroupedAATotal_dict={}
+for aminoacid, values in zip(GroupedAATotal['Amino Acid'], zip(GroupedAATotal.iloc[:,59:106].values.tolist())):
+    values=values[0]
+    if aminoacid in GroupedAATotal_dict.keys():
+        GroupedAATotal_dict[aminoacid].append(values)
+    else:
+        GroupedAATotal_dict[aminoacid]=[]
+        GroupedAATotal_dict[aminoacid].append(values)
+       
+for index, row in GroupedAA.iterrows():
+    NormoxicNumerator=row.iloc[9:21].sum()
+    amino_acid_dict_rows = GroupedAATotal_dict[row['Amino Acid']]
+    if len(amino_acid_dict_rows) ==1:
+         dict_rows_sum_for_denom = amino_acid_dict_rows[0]
+    else:
+        dict_rows_sum_for_denom = [sum(i) for i in zip(*amino_acid_dict_rows)]
+    NormoxicDenom=sum(dict_rows_sum_for_denom[0:12])
+    Normoxic_Average.append((NormoxicNumerator/NormoxicDenom)*100)
+    LTAnoxicNumerator=row.iloc[45:57].sum()
+    LTAnoxicDenom=sum(dict_rows_sum_for_denom[36:48])
+    LTAnoxic_Average.append((LTAnoxicNumerator/LTAnoxicDenom)*100)
+    STAnoxicNumerator=row.iloc[33:45].sum()
+    STAnoxicDenom=sum(dict_rows_sum_for_denom[24:36])
+    STAnoxic_Average.append((STAnoxicNumerator/STAnoxicDenom)*100)
+    RecoveryNumerator=row.iloc[21:33].sum()
+    RecoveryDenom=sum(dict_rows_sum_for_denom[12:24])
+    Recovery_Average.append((RecoveryNumerator/RecoveryDenom)*100)
+datastats["Normoxic_Average"]=Normoxic_Average 
+datastats["4d_Anoxic_Average"]=LTAnoxic_Average
+datastats["24h_Anoxic_Average"]=STAnoxic_Average
+datastats["Recovery_Average"]=Recovery_Average   
+datastats.to_csv(base_path+'/ResidueCoverage.csv', index=False)
+
+
+
+#The below document shows the relative coverage by a specific PTM for each modifiable residue (a residue shown as capable of having a PTM). For example, how often K covered by Ub?
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate calculations.csv",header=0)
+datastats= pd.DataFrame()
+Normoxic_Average=[]
+LTAnoxic_Average=[]
+STAnoxic_Average=[]
+Recovery_Average=[]
+GroupedAATotal=data.drop_duplicates('Amino Acid + Position')
+GroupedAA=data.groupby(['Amino Acid',"PTM Description"]).sum().reset_index()
+datastats['Amino Acid']=GroupedAA['Amino Acid']
+datastats["PTM Description"]=GroupedAA["PTM Description"]
+GroupedAATotal_dict={}
+for aminoacid, values in zip(GroupedAATotal['Amino Acid'], zip(GroupedAATotal.iloc[:,59:106].values.tolist())):
+    values=values[0]
+    if aminoacid in GroupedAATotal_dict.keys():
+        GroupedAATotal_dict[aminoacid].append(values)
+    else:
+        GroupedAATotal_dict[aminoacid]=[]
+        GroupedAATotal_dict[aminoacid].append(values)
+       
+for index, row in GroupedAA.iterrows():
+    NormoxicNumerator=row.iloc[9:21].sum()
+    amino_acid_dict_rows = GroupedAATotal_dict[row['Amino Acid']]
+    if len(amino_acid_dict_rows) ==1:
+         dict_rows_sum_for_denom = amino_acid_dict_rows[0]
+    else:
+        dict_rows_sum_for_denom = [sum(i) for i in zip(*amino_acid_dict_rows)]
+    NormoxicDenom=sum(dict_rows_sum_for_denom[0:12])
+    Normoxic_Average.append((NormoxicNumerator/NormoxicDenom)*100)
+    LTAnoxicNumerator=row.iloc[45:57].sum()
+    LTAnoxicDenom=sum(dict_rows_sum_for_denom[36:48])
+    LTAnoxic_Average.append((LTAnoxicNumerator/LTAnoxicDenom)*100)
+    STAnoxicNumerator=row.iloc[33:45].sum()
+    STAnoxicDenom=sum(dict_rows_sum_for_denom[24:36])
+    STAnoxic_Average.append((STAnoxicNumerator/STAnoxicDenom)*100)
+    RecoveryNumerator=row.iloc[21:33].sum()
+    RecoveryDenom=sum(dict_rows_sum_for_denom[12:24])
+    Recovery_Average.append((RecoveryNumerator/RecoveryDenom)*100)
+datastats["Normoxic_Average"]=Normoxic_Average 
+datastats["4d_Anoxic_Average"]=LTAnoxic_Average
+datastats["24h_Anoxic_Average"]=STAnoxic_Average
+datastats["Recovery_Average"]=Recovery_Average 
+datastats.to_csv(base_path+'/ResidueCoverageByPTM.csv', index=False)

@@ -38,6 +38,9 @@ with open(base_path+"CellhPTMs_Unimod.csv") as csvfile:
         while result!=None:
             if result.group() =="[GLu-C_ubiq]":
                 pep_seq=pep_seq.replace(result.group(),"(unimod:121)")
+            #if result.group() =="[ADPribose(T)]":
+                #pep_seq=pep_seq.replace(result.group(),"(unimod:213)")
+                #(unimod:213) shows up in code
             else:
                 pep_seq=pep_seq.replace(result.group(),"")
             result = re.search(pattern, pep_seq)
