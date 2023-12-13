@@ -90,6 +90,7 @@ colors18_2 <- c("#670571", "#d29eef", "#6799cc", "#6cc2b2", "#211259", "#127834"
 
 colors3 <- c("#b33e52", "#78b33e", "#3e9fb3")
 colors18_3 <- colors18[c(8,11,15,12)]
+#colors18_4 <- colors18[c(8,11,15,12,2,3)]
 colors7 <- c("#54990f", "#a3cc7a", "#0f8299", "#7abecc", "#990f26", "#cc7a88", "#653eb3")
 colors_volcano <- colors18[c(2,11,8,17)]
 
@@ -202,7 +203,7 @@ unique(Data$`Protein Description`)
 
 colors_H1 <- colors18[c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18)]my_histone <- Data[c(2:3)]##my_histone <- unique(my_histone)my_histone_xp <- (unique(my_histone[, c(1,2)]))i=2
 colors_loop <- setNames(colors_H1,unique(Data$`PTM Description`))
-for (i in 1:length(my_histone_xp$`Protein Accession`)){                     H1_Maps <- Data %>%                      filter(`Protein Accession` == my_histone_xp$`Protein Accession`[i]) %>%                      arrange(Position) %>%                      mutate(abbreviation = case_when(Condition == "4d Anoxia" ~ "4d",Condition == "24h Anoxia" ~ "24h", Condition == "Normoxic" ~ "N",  Condition == "Recovery" ~ "R"))                                                                                               #Detail_H1_Maps <- H1_Maps[ , c(14, 1:8)]
+for (i in 1:length(my_histone_xp$`Protein Accession`)){                     H1_Maps <- Data %>%                      filter(`Protein Accession` == my_histone_xp$`Protein Accession`[i]) %>%                      arrange(Position) %>%                      mutate(abbreviation = case_when(Condition == "4d Anoxia" ~ "4",Condition == "24h Anoxia" ~ "1", Condition == "Normoxic" ~ "0",  Condition == "Recovery" ~ "R"))                                                                                               #Detail_H1_Maps <- H1_Maps[ , c(14, 1:8)]
  		   Detail_H1_Maps <- H1_Maps[ , c(14, 15, 1:8)]                                      Summary_H1_Maps <- H1_Maps %>%                      group_by(abbreviation, Condition, hPTM_Name) %>%                      summarize(mean_Relative_Abundance = mean(Relative_Abundance))                                      Full_H1_Maps <- left_join(Summary_H1_Maps, Detail_H1_Maps, by = c("hPTM_Name","Condition"))                   Full_H1_Maps <- Full_H1_Maps[!duplicated(Full_H1_Maps), ]                                                         Full_H1_Maps <- Full_H1_Maps %>%                      arrange(Position)                                      order <- unique(Full_H1_Maps$`Amino Acid + Position`)                                      Full_H1_Maps$`Amino Acid + Position` <- factor(Full_H1_Maps$`Amino Acid + Position`, levels= order )                                                        Unique_title <- paste(as.character(my_histone_xp$`Protein Accession`[i]), as.character(my_histone_xp$`Protein Description`[i]), sep=" ")                                                                  H1_map <- ggplot(Full_H1_Maps, aes(fill = `PTM Description`, y = mean_Relative_Abundance, x = abbreviation)) +                     geom_bar(position = "stack", stat = "identity") +		     facet_wrap_paginate(~`Amino Acid + Position`, scales = "free", ncol = 6, nrow = 6) +
                      ggtitle(Unique_title) +                     xlab("Condition") +                     ylab("Average Relative \nAbundance (%)") +                     scale_fill_manual(values = colors_loop) +                     theme_bw() +                     theme(plot.title = element_text(color = "black", size = 12, face = "bold")) +                     theme(strip.text.x = element_text(size = 10)) +
 		     theme(aspect.ratio=1) 
@@ -275,19 +276,45 @@ print(PCA_Plot)
 
 
 
-
 # Volcano plots of different conditions
+
+## Importing statistics files
+
+
+NormoxicVRecovery <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/DatastatsNormoxicVRecovery.csv")
+NormoxicV4DAnoxia <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples//DatastatsNormoxicV4dAnoxia.csv")
+NormoxicV24HAnoxia <- read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/DatastatsNormoxicV24hAnoxia.csv")
+```
+
+#Structuring imported data
+
+
+NormoxicVRecovery <- NormoxicVRecovery %>% 
+  mutate(hPTM_Name = paste(NormoxicVRecovery$`Protein Accession`, NormoxicVRecovery$`Protein Description`, NormoxicVRecovery$`Amino Acid + Position`, NormoxicVRecovery$`PTM Description`))
+
+NormoxicV4DAnoxia<- NormoxicV4DAnoxia %>% 
+  mutate(hPTM_Name = paste(NormoxicV4DAnoxia$`Protein Accession`, NormoxicV4DAnoxia$`Protein Description`, NormoxicV4DAnoxia$`Amino Acid + Position`, NormoxicV4DAnoxia$`PTM Description`))
+
+NormoxicV24HAnoxia <- NormoxicV24HAnoxia %>% 
+  mutate(hPTM_Name = paste(NormoxicV24HAnoxia$`Protein Accession`, NormoxicV24HAnoxia$`Protein Description`, NormoxicV24HAnoxia$`Amino Acid + Position`, NormoxicV24HAnoxia$`PTM Description`))
+
+# Correcting the structure of the data frames
+
+NormoxicVRecovery$Log2FC <- as.numeric(NormoxicVRecovery$log2FC)
+NormoxicV4DAnoxia$Log2FC <- as.numeric(NormoxicV4DAnoxia$log2FC)
+NormoxicV24HAnoxia$Log2FC <- as.numeric(NormoxicV24HAnoxia$log2FC)
+
+
 
 ## Histone H1
 
-### Anoxic vs Recovery
+### Normoxic vs Recovery
 
-```{r}
-Gills_Kidney$`Adjusted pvalue` <- as.numeric(Gills_Kidney$`Adjusted pvalue`)
-Gills_Kidney <- Gills_Kidney %>% 
+NormoxicVRecovery$`Adjusted pvalue` <- as.numeric(NormoxicVRecovery$`corrected_p_values`)
+NormoxicVRecovery <- NormoxicVRecovery %>% 
   filter(Log2FC != 0)
 
-Exp2_Gills_Kidney_Statistics <- Gills_Kidney %>% 
+NormoxicVRecovery_Statistics <- NormoxicVRecovery %>% 
   mutate(Key = case_when(
     Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
     Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
@@ -296,19 +323,16 @@ Exp2_Gills_Kidney_Statistics <- Gills_Kidney %>%
     Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
     TRUE ~ "Nonsignificant"
   )) %>% 
-  filter(`Protein Description` == "H1.0-B" |
-           `Protein Description` == "protamine-like protein" |
-           `Protein Description` == "H1.10" |
-           `Protein Description` == "H1" |
+  filter(`Protein Description` == "H1-gamma,_late-like" |
            `Protein Description` == "H1-like" |
-           `Protein Description` == "H1 isoform X1"
+           `Protein Description` == "H1.0-B"
   )
 
 order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
 
-Exp2_Gills_Kidney_Statistics$Key <- factor(Exp2_Gills_Kidney_Statistics$Key, levels= order )
+NormoxicVRecovery_Statistics$Key <- factor(NormoxicVRecovery_Statistics$Key, levels= order )
 
-Volcano_Plot_Gills_Kidney_H1 <- ggplot(data=Exp2_Gills_Kidney_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+Volcano_Plot_NormoxicVRecovery_H1 <- ggplot(data=NormoxicVRecovery_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
   geom_point(alpha=0.7) +
   theme_classic() +
   scale_color_manual(values=colors_volcano) +
@@ -318,18 +342,17 @@ Volcano_Plot_Gills_Kidney_H1 <- ggplot(data=Exp2_Gills_Kidney_Statistics, aes(x=
   xlab(expression("Log"[2]*" Fold Change")) +
   ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
 
-print(Volcano_Plot_Gills_Kidney_H1)
-```
+print(Volcano_Plot_NormoxicVRecovery_H1)
 
 
-### Gills vs Testes
 
-```{r}
-Gills_Testes$`Adjusted pvalue` <- as.numeric(Gills_Testes$`Adjusted pvalue`)
-Gills_Testes <- Gills_Testes %>% 
+### Normoxic vs 4 Days Anoxia
+
+NormoxicV4DAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV4DAnoxia$`corrected_p_values`)
+NormoxicV4DAnoxia <- NormoxicV4DAnoxia %>% 
   filter(Log2FC != 0)
 
-Exp2_Gills_Testes_Statistics <- Gills_Testes %>% 
+NormoxicV4DAnoxia_Statistics <- NormoxicV4DAnoxia %>% 
   mutate(Key = case_when(
     Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
     Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
@@ -338,19 +361,16 @@ Exp2_Gills_Testes_Statistics <- Gills_Testes %>%
     Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
     TRUE ~ "Nonsignificant"
   )) %>% 
-  filter(`Protein Description` == "H1.0-B" |
-           `Protein Description` == "protamine-like protein" |
-           `Protein Description` == "H1.10" |
-           `Protein Description` == "H1" |
+  filter(`Protein Description` == "H1-gamma,_late-like" |
            `Protein Description` == "H1-like" |
-           `Protein Description` == "H1 isoform X1"
+           `Protein Description` == "H1.0-B"
   )
 
 order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
 
-Exp2_Gills_Testes_Statistics$Key <- factor(Exp2_Gills_Testes_Statistics$Key, levels= order )
+NormoxicV4DAnoxia_Statistics$Key <- factor(NormoxicV4DAnoxia_Statistics$Key, levels= order )
 
-Volcano_Plot_Gills_Testes_H1 <- ggplot(data=Exp2_Gills_Testes_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+Volcano_Plot_NormoxicV4DAnoxia_H1 <- ggplot(data=NormoxicV4DAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
   geom_point(alpha=0.7) +
   theme_classic() +
   scale_color_manual(values=colors_volcano) +
@@ -360,18 +380,18 @@ Volcano_Plot_Gills_Testes_H1 <- ggplot(data=Exp2_Gills_Testes_Statistics, aes(x=
   xlab(expression("Log"[2]*" Fold Change")) +
   ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
 
-print(Volcano_Plot_Gills_Testes_H1)
-```
+print(Volcano_Plot_NormoxicV4DAnoxia_H1)
 
 
-### Kidney vs Testes
 
-```{r}
-Kidney_Testes$`Adjusted pvalue` <- as.numeric(Kidney_Testes$`Adjusted pvalue`)
-Kidney_Testes <- Kidney_Testes %>% 
+### Normoxic vs 24hr Anoxia
+
+
+NormoxicV24HAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV24HAnoxia$`corrected_p_values`)
+NormoxicV24HAnoxia <- NormoxicV24HAnoxia %>% 
   filter(Log2FC != 0)
 
-Exp2_Kidney_Testes_Statistics <- Kidney_Testes %>% 
+NormoxicV24HAnoxia_Statistics <- NormoxicV24HAnoxia %>% 
   mutate(Key = case_when(
     Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
     Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
@@ -380,38 +400,442 @@ Exp2_Kidney_Testes_Statistics <- Kidney_Testes %>%
     Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
     TRUE ~ "Nonsignificant"
   )) %>% 
-  filter(`Protein Description` == "H1.0-B" |
-           `Protein Description` == "protamine-like protein" |
-           `Protein Description` == "H1.10" |
-           `Protein Description` == "H1" |
+  filter(`Protein Description` == "H1-gamma,_late-like" |
            `Protein Description` == "H1-like" |
-           `Protein Description` == "H1 isoform X1"
+           `Protein Description` == "H1.0-B"
   )
 
 order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
 
-Exp2_Kidney_Testes_Statistics$Key <- factor(Exp2_Kidney_Testes_Statistics$Key, levels= order )
+NormoxicV24HAnoxia_Statistics$Key <- factor(NormoxicV24HAnoxia_Statistics$Key, levels= order )
 
-Volcano_Plot_Kidney_Testes_H1 <- ggplot(data=Exp2_Kidney_Testes_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+Volcano_Plot_NormoxicV24HAnoxia_H1 <- ggplot(data=NormoxicV24HAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
   geom_point(alpha=0.7) +
   theme_classic() +
-  scale_color_manual(values=c("#990f26", "#3e9fb3", "#666666")) +
+  scale_color_manual(values=colors_volcano) +
   geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
   geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
   theme(legend.position="none") +
   xlab(expression("Log"[2]*" Fold Change")) +
-  ylab(expression("-Log"[10]*"(p"[Adj.]*")")) 
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
 
-print(Volcano_Plot_Kidney_Testes_H1)
-```
+print(Volcano_Plot_NormoxicV24HAnoxia_H1)
+
 
 
 #### Compiled Volcano Plots
 
-```{r}
-panel_volcano_plot_H1 <- plot_grid(Volcano_Plot_Gills_Kidney_H1, Volcano_Plot_Gills_Testes_H1, Volcano_Plot_Kidney_Testes_H1, ncol=1, nrow = 3, labels = c('B', 'C', 'D'), label_size = 12)
+
+panel_volcano_plot_H1 <- plot_grid(Volcano_Plot_NormoxicVRecovery_H1, Volcano_Plot_NormoxicV4DAnoxia_H1, Volcano_Plot_NormoxicV24HAnoxia_H1, ncol=1, nrow = 3, labels = c('A', 'B', 'C'), label_size = 12)
 
 print(panel_volcano_plot_H1)
+
+
+
+
+
+
+## Histone H2A
+
+### Normoxic vs Recovery
+
+NormoxicVRecovery$`Adjusted pvalue` <- as.numeric(NormoxicVRecovery$`corrected_p_values`)
+NormoxicVRecovery <- NormoxicVRecovery %>% 
+  filter(Log2FC != 0)
+
+NormoxicVRecovery_Statistics <- NormoxicVRecovery %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H2A-like" |
+           `Protein Description` == "H2A" |
+	   `Protein Description` == "H2A" |
+           `Protein Description` == "macro-H2A.2" |
+	   `Protein Description` == "H2AX_H2AX" |
+	   `Protein Description` == "H2A.Z" |
+	   `Protein Description` == "H2AX-like" |
+           `Protein Description` == "H2A.V" 
+  )
+	
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicVRecovery_Statistics$Key <- factor(NormoxicVRecovery_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicVRecovery_H2A <- ggplot(data=NormoxicVRecovery_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicVRecovery_H2A)
+
+
+
+### Normoxic vs 4 Days Anoxia
+
+NormoxicV4DAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV4DAnoxia$`corrected_p_values`)
+NormoxicV4DAnoxia <- NormoxicV4DAnoxia %>% 
+  filter(Log2FC != 0)
+
+NormoxicV4DAnoxia_Statistics <- NormoxicV4DAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H2A-like" |
+           `Protein Description` == "H2A" |
+	   `Protein Description` == "H2A" |
+           `Protein Description` == "macro-H2A.2" |
+	   `Protein Description` == "H2AX_H2AX" |
+	   `Protein Description` == "H2A.Z" |
+	   `Protein Description` == "H2AX-like" |
+           `Protein Description` == "H2A.V" 
+  )
+	
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicV4DAnoxia_Statistics$Key <- factor(NormoxicV4DAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicV4DAnoxia_H2A <- ggplot(data=NormoxicV4DAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicV4DAnoxia_H2A)
+
+
+
+### Normoxic vs 24hr Anoxia
+
+
+NormoxicV24HAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV24HAnoxia$`corrected_p_values`)
+NormoxicV24HAnoxia <- NormoxicV24HAnoxia %>% 
+  filter(Log2FC != 0)
+
+NormoxicV24HAnoxia_Statistics <- NormoxicV24HAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H2A-like" |
+           `Protein Description` == "H2A" |
+	   `Protein Description` == "H2A" |
+           `Protein Description` == "macro-H2A.2" |
+	   `Protein Description` == "H2AX_H2AX" |
+	   `Protein Description` == "H2A.Z" |
+	   `Protein Description` == "H2AX-like" |
+           `Protein Description` == "H2A.V" 
+  )
+	
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicV24HAnoxia_Statistics$Key <- factor(NormoxicV24HAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicV24HAnoxia_H2A <- ggplot(data=NormoxicV24HAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicV24HAnoxia_H2A)
+
+
+
+#### Compiled Volcano Plots
+
+
+panel_volcano_plot_H2A <- plot_grid(Volcano_Plot_NormoxicVRecovery_H2A, Volcano_Plot_NormoxicV4DAnoxia_H2A, Volcano_Plot_NormoxicV24HAnoxia_H2A, ncol=1, nrow = 3, labels = c('A', 'B', 'C'), label_size = 12)
+
+print(panel_volcano_plot_H2A)
+
+
+
+
+
+## Histone H2B
+
+### Normoxic vs Recovery
+
+NormoxicVRecovery$`Adjusted pvalue` <- as.numeric(NormoxicVRecovery$`corrected_p_values`)
+NormoxicVRecovery <- NormoxicVRecovery %>% 
+  filter(Log2FC != 0)
+
+NormoxicVRecovery_Statistics <- NormoxicVRecovery %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H2B_1/2-like" |
+           `Protein Description` == "H2B_1/2_H2B_1/2_H2B_1/2_H2B_1/2" |
+	   `Protein Description` == "H2B.3-like" |
+           `Protein Description` == "H2B.L4-like"
+  )
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicVRecovery_Statistics$Key <- factor(NormoxicVRecovery_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicVRecovery_H2B <- ggplot(data=NormoxicVRecovery_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicVRecovery_H2B)
+
+
+
+### Normoxic vs 4 Days Anoxia
+
+NormoxicV4DAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV4DAnoxia$`corrected_p_values`)
+NormoxicV4DAnoxia <- NormoxicV4DAnoxia %>% 
+  filter(Log2FC != 0)
+
+NormoxicV4DAnoxia_Statistics <- NormoxicV4DAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H2B_1/2-like" |
+           `Protein Description` == "H2B_1/2_H2B_1/2_H2B_1/2_H2B_1/2" |
+	   `Protein Description` == "H2B.3-like" |
+           `Protein Description` == "H2B.L4-like"
+  )
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicV4DAnoxia_Statistics$Key <- factor(NormoxicV4DAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicV4DAnoxia_H2B <- ggplot(data=NormoxicV4DAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicV4DAnoxia_H2B)
+
+
+### Normoxic vs 24hr Anoxia
+
+
+NormoxicV24HAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV24HAnoxia$`corrected_p_values`)
+NormoxicV24HAnoxia <- NormoxicV24HAnoxia %>% 
+  filter(Log2FC != 0)
+
+NormoxicV24HAnoxia_Statistics <- NormoxicV24HAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H2B_1/2-like" |
+           `Protein Description` == "H2B_1/2_H2B_1/2_H2B_1/2_H2B_1/2" |
+	   `Protein Description` == "H2B.3-like" |
+           `Protein Description` == "H2B.L4-like"
+  )
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicV24HAnoxia_Statistics$Key <- factor(NormoxicV24HAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicV24HAnoxia_H2B <- ggplot(data=NormoxicV24HAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicV24HAnoxia_H2B)
+
+
+
+#### Compiled Volcano Plots
+
+
+panel_volcano_plot_H2B <- plot_grid(Volcano_Plot_NormoxicVRecovery_H2B, Volcano_Plot_NormoxicV4DAnoxia_H2B, Volcano_Plot_NormoxicV24HAnoxia_H2B, ncol=1, nrow = 3, labels = c('A', 'B', 'C'), label_size = 12)
+
+print(panel_volcano_plot_H2B)
+
+
+
+
+
+
+## Histone H3
+
+### Normoxic vs Recovery
+
+NormoxicVRecovery$`Adjusted pvalue` <- as.numeric(NormoxicVRecovery$`corrected_p_values`)
+NormoxicVRecovery <- NormoxicVRecovery %>% 
+  filter(Log2FC != 0)
+
+NormoxicVRecovery_Statistics <- NormoxicVRecovery %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H3.3" |
+	   `Protein Description` == "H3.3_H3.3_H3.3_H3.3" |
+           `Protein Description` == "H3-like" 
+  )
+
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicVRecovery_Statistics$Key <- factor(NormoxicVRecovery_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicVRecovery_H3 <- ggplot(data=NormoxicVRecovery_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicVRecovery_H3)
+
+
+
+### Normoxic vs 4 Days Anoxia
+
+NormoxicV4DAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV4DAnoxia$`corrected_p_values`)
+NormoxicV4DAnoxia <- NormoxicV4DAnoxia %>% 
+  filter(Log2FC != 0)
+
+NormoxicV4DAnoxia_Statistics <- NormoxicV4DAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H3.3" |
+	   `Protein Description` == "H3.3_H3.3_H3.3_H3.3" |
+           `Protein Description` == "H3-like" 
+  )
+
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicV4DAnoxia_Statistics$Key <- factor(NormoxicV4DAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicV4DAnoxia_H3 <- ggplot(data=NormoxicV4DAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicV4DAnoxia_H3)
+
+
+
+### Normoxic vs 24hr Anoxia
+
+
+NormoxicV24HAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV24HAnoxia$`corrected_p_values`)
+NormoxicV24HAnoxia <- NormoxicV24HAnoxia %>% 
+  filter(Log2FC != 0)
+
+NormoxicV24HAnoxia_Statistics <- NormoxicV24HAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) %>% 
+  filter(`Protein Description` == "H3.3" |
+	   `Protein Description` == "H3.3_H3.3_H3.3_H3.3" |
+           `Protein Description` == "H3-like" 
+  )
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicV24HAnoxia_Statistics$Key <- factor(NormoxicV24HAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicV24HAnoxia_H3 <- ggplot(data=NormoxicV24HAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicV24HAnoxia_H3)
+
+
+
+#### Compiled Volcano Plots
+
+
+panel_volcano_plot_H3 <- plot_grid(Volcano_Plot_NormoxicVRecovery_H3, Volcano_Plot_NormoxicV4DAnoxia_H3, Volcano_Plot_NormoxicV24HAnoxia_H3, ncol=1, nrow = 3, labels = c('A', 'B', 'C'), label_size = 12)
+
+print(panel_volcano_plot_H3)
 
 
 

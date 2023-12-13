@@ -47,34 +47,120 @@ datastats=datastats.replace(-np.inf, 0)
 datastats.to_csv(base_path+'/WS40NE Anoxia Total PTM.csv', index=False)
 
 
+
+
+
+
+
 ####Statistical analysis
 ##Unique hPTMs
 #The below code performs statistics on the relative abundance data for each unique hPTM (residue,PTM,and histone)
-#data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Relative_Abundance.csv",header=0)
-#datastats= data.iloc[:,0:8]
-#datastats["Normoxic_Average"]=data.iloc[:,1:49].mean(axis=1)
-#datastats["Anoxic_Average"]=data.iloc[:,58:106].mean(axis=1)
-#datastats['log2FC'] = np.log2(datastats['Anoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
-# datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:14],data.iloc[:,58:106],axis=1)
-#datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data.iloc[:,8:14], data.iloc[:,58:106],axis=1)
-#datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
-#datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
 
+#################Normoxic vs Recovery
+data2 = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Relative_Abundance.csv",header=0)
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate calculations.csv",header=0)
+datastats= data.iloc[:,0:8]
+datastats["Normoxic_Average"]=(data.iloc[:,9:21].sum(axis=1)/data.iloc[:,58:70].sum(axis=1))*100
+datastats["Recovery_Average"]=(data.iloc[:,21:33].sum(axis=1)/data.iloc[:,70:82].sum(axis=1))*100
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['Recovery_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+#datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:20],data.iloc[:,20:32],axis=1)
+datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data2.iloc[:,8:20], data2.iloc[:,20:32],axis=1)
+datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
+datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
 # Write DataFrame to CSV
-#datastats.to_csv(base_path+'/Datastats.csv', index=False)
+datastats.to_csv(base_path+'/DatastatsNormoxicVRecovery.csv', index=False)
+
+#################Normoxic vs 4 days anoxia
+data2 = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Relative_Abundance.csv",header=0)
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate calculations.csv",header=0)
+datastats= data.iloc[:,0:8]
+datastats["Normoxic_Average"]=(data.iloc[:,9:21].sum(axis=1)/data.iloc[:,58:70].sum(axis=1))*100
+datastats["4DAnoxic_Average"]=(data.iloc[:,45:57].sum(axis=1)/data.iloc[:,94:106].sum(axis=1))*100
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['4DAnoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+#datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:20],data.iloc[:,20:32],axis=1)
+datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data2.iloc[:,8:20], data2.iloc[:,44:57],axis=1)
+datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
+datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
+# Write DataFrame to CSV
+datastats.to_csv(base_path+'/DatastatsNormoxicV4dAnoxia.csv', index=False)
+
+#################Normoxic vs 24h anoxia
+data2 = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Relative_Abundance.csv",header=0)
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate calculations.csv",header=0)
+datastats= data.iloc[:,0:8]
+datastats["Normoxic_Average"]=(data.iloc[:,9:21].sum(axis=1)/data.iloc[:,58:70].sum(axis=1))*100
+datastats["24hAnoxic_Average"]=(data.iloc[:,33:45].sum(axis=1)/data.iloc[:,82:94].sum(axis=1))*100
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['24hAnoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+#datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:20],data.iloc[:,20:32],axis=1)
+datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data2.iloc[:,8:20], data2.iloc[:,32:44],axis=1)
+datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
+datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
+# Write DataFrame to CSV
+datastats.to_csv(base_path+'/DatastatsNormoxicV24hAnoxia.csv', index=False)
+
+
+
+
+
+
+
 
 ##Global statistics
 #The below code performs statistics on the relative abundance data global hPTM changes (independent of residue and histone)
-#data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Embryo Anoxia Total PTM.csv",header=0)
-#datastats= data.iloc[:,0:1]
-#datastats["Normoxic_Average"]=data.iloc[:,1:7].mean(axis=1)
-#datastats["Anoxic_Average"]=data.iloc[:,7:13].mean(axis=1)
-#datastats['log2FC'] = np.log2(datastats['Anoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
-# datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:14],data.iloc[:,14:20],axis=1)
-#datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data.iloc[:,1:7], data.iloc[:,7:13],axis=1)
-#datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
-#datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
-#datastats.to_csv(base_path+'/DatastatsGlobal.csv', index=False)
+
+#################Normoxic vs Recovery
+data2 = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/WS40NE Anoxia Total PTM.csv",header=0)
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate_calculations_Total_PTMs.csv",header=0)
+datastats= data.iloc[:,0:1]
+datastats["Normoxic_Average"]=(data.iloc[:,9:21].sum(axis=1)/data.iloc[:,58:70].sum(axis=1))*100
+datastats["Recovery_Average"]=(data.iloc[:,21:33].sum(axis=1)/data.iloc[:,70:82].sum(axis=1))*100
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['Recovery_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+#datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:20],data.iloc[:,20:32],axis=1)
+datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data2.iloc[:,8:20], data2.iloc[:,20:32],axis=1)
+datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
+datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
+datastats.to_csv(base_path+'/DatastatsGlobalNormoxicVRecovery.csv', index=False)
+
+#################Normoxic vs 4 days anoxia
+data2 = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/WS40NE Anoxia Total PTM.csv",header=0)
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate_calculations_Total_PTMs.csv",header=0)
+datastats= data.iloc[:,0:1]
+datastats["Normoxic_Average"]=(data.iloc[:,9:21].sum(axis=1)/data.iloc[:,58:70].sum(axis=1))*100
+datastats["4DAnoxic_Average"]=(data.iloc[:,45:57].sum(axis=1)/data.iloc[:,94:106].sum(axis=1))*100
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['4DAnoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+#datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:20],data.iloc[:,20:32],axis=1)
+datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data2.iloc[:,8:20], data2.iloc[:,44:57],axis=1)
+datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
+datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
+datastats.to_csv(base_path+'/DatastatsGlobalNormoxicV4DAnoxia.csv', index=False)
+
+#################Normoxic vs 24h anoxia
+data2 = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/WS40NE Anoxia Total PTM.csv",header=0)
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate_calculations_Total_PTMs.csv",header=0)
+datastats= data.iloc[:,0:1]
+datastats["Normoxic_Average"]=(data.iloc[:,9:21].sum(axis=1)/data.iloc[:,58:70].sum(axis=1))*100
+datastats["24hAnoxic_Average"]=(data.iloc[:,33:45].sum(axis=1)/data.iloc[:,82:94].sum(axis=1))*100
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['24hAnoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+#datastats['Fvalue'],datastats['Anova_Pvalue'] = f_oneway(data.iloc[:,8:20],data.iloc[:,20:32],axis=1)
+datastats['T-test_t_statistic'], datastats['T-test_p_value'] = ttest_ind(data2.iloc[:,8:20], data2.iloc[:,32:44],axis=1)
+datastats['T-test_p_value'] = datastats['T-test_p_value'].fillna(1)
+datastats['corrected_p_values'] = multipletests(datastats['T-test_p_value'], method='fdr_bh')[1]
+datastats.to_csv(base_path+'/DatastatsGlobalNormoxicV24HAnoxia.csv', index=False)
+
+
+
 
 #The below document shows the relative coverage of each modifiable residue (a residue shown as capable of having a PTM). For example, how often K covered by PTMs?
 data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/code/WS40NE Library/Replicate calculations.csv",header=0)

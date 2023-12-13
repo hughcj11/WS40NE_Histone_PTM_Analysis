@@ -32,15 +32,18 @@ with open(base_path+"CellhPTMs_Unimod.csv") as csvfile:
         answer=[row[1],row[2],row[5],row[6],ua]
         #Below defines which row we need to begin reading to get several "answers", including the unimod and its position/residue
         pep_seq=row[3]
-        #The below code removes any mass shifts that are not unimods, which appear in the Skyline data in brackets [].
+        #(unimod:213) shows up in Skyline output but may not accurate based on the digestion used. Below code removes these.
+        #pep_seq=pep_seq.replace("(unimod:213)","")
+        #The below code removes any mass shifts that are not unimods recognized by Skyline, which appear in the Skyline data in brackets [].
+        #However, specific PTMs in brackets are converted into the unimod format. A specific "if" statement must be added for each [PTM] to be included
         pattern = '\[.*\]'
         result = re.search(pattern, pep_seq)
         while result!=None:
             if result.group() =="[GLu-C_ubiq]":
                 pep_seq=pep_seq.replace(result.group(),"(unimod:121)")
-            #if result.group() =="[ADPribose(T)]":
-                #pep_seq=pep_seq.replace(result.group(),"(unimod:213)")
-                #(unimod:213) shows up in code
+            if result.group() =="[ADPribose(T)]":
+                pep_seq=pep_seq.replace(result.group(),"(unimod:213)")
+              
             else:
                 pep_seq=pep_seq.replace(result.group(),"")
             result = re.search(pattern, pep_seq)

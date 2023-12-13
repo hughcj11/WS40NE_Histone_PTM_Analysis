@@ -80,6 +80,7 @@ K,37,Trimethyl,Yes
 R,37,Trimethyl,Chemical Derivative
 C,53,4-hydroxynonenal,Yes
 K,53,4-hydroxynonenal,Yes
+H,53,4-hydroxynonenal,Yes
 C,121,GlyGly,Yes
 T,121,GlyGly,Yes
 K,121,GlyGly,Yes
@@ -90,6 +91,7 @@ N,213,ADP-Ribosyl,Yes
 E,213,ADP-Ribosyl,Yes
 K,213,ADP-Ribosyl,Yes
 R,213,ADP-Ribosyl,Yes
+T,213,ADP-Ribosyl,Yes
 K,255,Acetald+28 / Dimethyl,Yes
 K,378,Carboxyethyl / Lactyl,Yes
 R,425,Dioxidation,Yes
