@@ -1,6 +1,5 @@
 #Author: Chelsea Hughes
-import csv
-import re
+
 import numpy as np
 from pandas import read_csv
 import pandas as pd
@@ -421,8 +420,163 @@ merged = pd.merge(merged, DataNormv24hFiltered, on=['hPTM_ID', 'PTM Description'
 merged = pd.merge(merged, DataNormv4dFiltered, on=['hPTM_ID', 'PTM Description', "Protein Accession", "Protein Description", "Position", "Amino Acid", "Amino Acid + Position", "Unimod"], how='outer') 
 merged = pd.merge(merged, DataNormvRecFiltered, on=['hPTM_ID', 'PTM Description', "Protein Accession", "Protein Description", "Position", "Amino Acid", "Amino Acid + Position", "Unimod"], how='outer') 
 
-merged[['hPTM_ID', 'PTM Description', "Protein Accession", "Protein Description", "Position", "Amino Acid", "Amino Acid + Position", "Unimod","Normoxia vs 24hr Anoxia corrected p-value","Normoxia vs 4d Anoxia corrected p-value", "Normoxia vs Recovery corrected p-value", "4d Anoxia vs 24hr Anoxia corrected p-value", "Recovery vs 24hr Anoxia corrected p-value", "4d Anoxia vs Recovery corrected p-value"]]
+merged =merged[['hPTM_ID', 'PTM Description', "Protein Accession", "Protein Description", "Position", "Amino Acid", "Amino Acid + Position", "Unimod","Normoxia vs 24hr Anoxia corrected p-value","Normoxia vs 4d Anoxia corrected p-value", "Normoxia vs Recovery corrected p-value", "4d Anoxia vs 24hr Anoxia corrected p-value", "Recovery vs 24hr Anoxia corrected p-value", "4d Anoxia vs Recovery corrected p-value"]]
 
 
 merged.to_csv(base_path+'/SighPTMs.csv', index=False)
 DataRecv24Filtered.to_csv(base_path+'/DataRecv24Filtered.csv', index=False)
+
+#Code to find all global sig hptms an compile them in one document
+
+DataRecv24= read_csv(base_path+'/DatastatsGlobalRecoveryV24hAnoxia.csv') #
+DataRecv4d= read_csv(base_path+'/DatastatsGlobalRecoveryV4DAnoxia.csv') #
+DataNormv24h= read_csv(base_path+'/DatastatsGlobalNormoxicV24hAnoxia.csv')#
+DataNormv4d= read_csv(base_path+'/DatastatsGlobalNormoxicV4dAnoxia.csv')#
+DataNormvRec= read_csv(base_path+'/DatastatsGlobalNormoxicVRecovery.csv')
+Data24hv4d= read_csv(base_path+'/DatastatsGlobal4DV24hAnoxia.csv') #
+
+DataRecv24Filtered= DataRecv24[DataRecv24['corrected_p_values']<.05]
+DataRecv24Filtered.rename(columns={"corrected_p_values": "Recovery vs 24hr Anoxia corrected p-value"}, inplace=True) 
+DataRecv24Filtered= DataRecv24Filtered.drop(columns=['Recovery_Average','24hAnoxic_Average', 'T-test_t_statistic', 'T-test_p_value', 'log2FC'])
+
+Data24hv4dFiltered= Data24hv4d[Data24hv4d['corrected_p_values']<.05]
+Data24hv4dFiltered.rename(columns={"corrected_p_values": "4d Anoxia vs 24hr Anoxia corrected p-value"}, inplace=True) 
+Data24hv4dFiltered= Data24hv4dFiltered.drop(columns=['4DAnoxic_Average','24hAnoxic_Average', 'T-test_t_statistic', 'T-test_p_value', 'log2FC'])
+
+DataNormv24hFiltered= DataNormv24h[DataNormv24h['corrected_p_values']<.05]
+DataNormv24hFiltered.rename(columns={"corrected_p_values": "Normoxia vs 24hr Anoxia corrected p-value"}, inplace=True) 
+DataNormv24hFiltered= DataNormv24hFiltered.drop(columns=['Normoxic_Average','24hAnoxic_Average', 'T-test_t_statistic', 'T-test_p_value', 'log2FC'])
+
+DataNormv4dFiltered= DataNormv4d[DataNormv4d['corrected_p_values']<.05]
+DataNormv4dFiltered.rename(columns={"corrected_p_values": "Normoxia vs 4d Anoxia corrected p-value"}, inplace=True) 
+DataNormv4dFiltered= DataNormv4dFiltered.drop(columns=['Normoxic_Average','4DAnoxic_Average', 'T-test_t_statistic', 'T-test_p_value', 'log2FC'])
+
+DataNormvRecFiltered= DataNormvRec[DataNormvRec['corrected_p_values']<.05]
+DataNormvRecFiltered.rename(columns={"corrected_p_values": "Normoxia vs Recovery corrected p-value"}, inplace=True) 
+DataNormvRecFiltered= DataNormvRecFiltered.drop(columns=['Normoxic_Average','Recovery_Average', 'T-test_t_statistic', 'T-test_p_value', 'log2FC'])
+
+DataRecv4dFiltered= DataRecv4d[DataRecv4d['corrected_p_values']<.05]
+DataRecv4dFiltered.rename(columns={"corrected_p_values": "4d Anoxia vs Recovery corrected p-value"},inplace=True) 
+DataRecv4dFiltered= DataRecv4dFiltered.drop(columns=['4DAnoxic_Average','Recovery_Average', 'T-test_t_statistic', 'T-test_p_value', 'log2FC'])
+merged = pd.merge(DataRecv4dFiltered, DataRecv24Filtered, on=["Unimod"], how='outer')
+merged = pd.merge(merged, Data24hv4dFiltered, on=["Unimod"], how='outer') 
+merged = pd.merge(merged, DataNormv24hFiltered, on=["Unimod"], how='outer') 
+merged = pd.merge(merged, DataNormv4dFiltered, on=["Unimod"], how='outer') 
+merged = pd.merge(merged, DataNormvRecFiltered, on=["Unimod"], how='outer') 
+
+merged =merged[["Unimod","Normoxia vs 24hr Anoxia corrected p-value","Normoxia vs 4d Anoxia corrected p-value", "Normoxia vs Recovery corrected p-value", "4d Anoxia vs 24hr Anoxia corrected p-value", "Recovery vs 24hr Anoxia corrected p-value", "4d Anoxia vs Recovery corrected p-value"]]
+merged.to_csv(base_path+'/SigGlobalhPTMs.csv', index=False)
+
+
+
+
+
+#Code to find logfold change for all global sig hptms an compile them in one document
+
+DataRecv24= read_csv(base_path+'/DatastatsGlobalRecoveryV24hAnoxia.csv') #
+DataRecv4d= read_csv(base_path+'/DatastatsGlobalRecoveryV4DAnoxia.csv') #
+DataNormv24h= read_csv(base_path+'/DatastatsGlobalNormoxicV24hAnoxia.csv')#
+DataNormv4d= read_csv(base_path+'/DatastatsGlobalNormoxicV4dAnoxia.csv')#
+DataNormvRec= read_csv(base_path+'/DatastatsGlobalNormoxicVRecovery.csv')
+Data24hv4d= read_csv(base_path+'/DatastatsGlobal4DV24hAnoxia.csv') #
+
+DataRecv24Filtered= DataRecv24[DataRecv24['corrected_p_values']<.05]
+DataRecv24Filtered.rename(columns={"log2FC": "Recovery vs 24hr Anoxia log2FC"}, inplace=True) 
+DataRecv24Filtered= DataRecv24Filtered.drop(columns=['Recovery_Average','24hAnoxic_Average', 'T-test_t_statistic', 'T-test_p_value', "corrected_p_values"])
+
+Data24hv4dFiltered= Data24hv4d[Data24hv4d['corrected_p_values']<.05]
+Data24hv4dFiltered.rename(columns={"log2FC": "4d Anoxia vs 24hr Anoxia log2FC"}, inplace=True) 
+Data24hv4dFiltered= Data24hv4dFiltered.drop(columns=['4DAnoxic_Average','24hAnoxic_Average', 'T-test_t_statistic', 'T-test_p_value', "corrected_p_values"])
+
+DataNormv24hFiltered= DataNormv24h[DataNormv24h['corrected_p_values']<.05]
+DataNormv24hFiltered.rename(columns={"log2FC": "Normoxia vs 24hr Anoxia log2FC"}, inplace=True) 
+DataNormv24hFiltered= DataNormv24hFiltered.drop(columns=['Normoxic_Average','24hAnoxic_Average', 'T-test_t_statistic', 'T-test_p_value', "corrected_p_values"])
+
+DataNormv4dFiltered= DataNormv4d[DataNormv4d['corrected_p_values']<.05]
+DataNormv4dFiltered.rename(columns={"log2FC": "Normoxia vs 4d Anoxia log2FC"}, inplace=True) 
+DataNormv4dFiltered= DataNormv4dFiltered.drop(columns=['Normoxic_Average','4DAnoxic_Average', 'T-test_t_statistic', 'T-test_p_value', "corrected_p_values"])
+
+DataNormvRecFiltered= DataNormvRec[DataNormvRec['corrected_p_values']<.05]
+DataNormvRecFiltered.rename(columns={"log2FC": "Normoxia vs Recovery log2FC"}, inplace=True) 
+DataNormvRecFiltered= DataNormvRecFiltered.drop(columns=['Normoxic_Average','Recovery_Average', 'T-test_t_statistic', 'T-test_p_value', "corrected_p_values"])
+
+DataRecv4dFiltered= DataRecv4d[DataRecv4d['corrected_p_values']<.05]
+DataRecv4dFiltered.rename(columns={"log2FC": "4d Anoxia vs Recovery log2FC"},inplace=True) 
+DataRecv4dFiltered= DataRecv4dFiltered.drop(columns=['4DAnoxic_Average','Recovery_Average', 'T-test_t_statistic', 'T-test_p_value', "corrected_p_values"])
+merged = pd.merge(DataRecv4dFiltered, DataRecv24Filtered, on=["Unimod"], how='outer')
+merged = pd.merge(merged, Data24hv4dFiltered, on=["Unimod"], how='outer') 
+merged = pd.merge(merged, DataNormv24hFiltered, on=["Unimod"], how='outer') 
+merged = pd.merge(merged, DataNormv4dFiltered, on=["Unimod"], how='outer') 
+merged = pd.merge(merged, DataNormvRecFiltered, on=["Unimod"], how='outer') 
+
+merged =merged[["Unimod","Normoxia vs 24hr Anoxia log2FC","Normoxia vs 4d Anoxia log2FC", "Normoxia vs Recovery log2FC", "4d Anoxia vs 24hr Anoxia log2FC", "Recovery vs 24hr Anoxia log2FC", "4d Anoxia vs Recovery log2FC"]]
+merged.to_csv(base_path+'/SigGlobalhPTMslogfold.csv', index=False)
+
+
+
+#Statistics on Protein Abundance
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Version 2 Calculation for Protein Abundance for WS40NEhPTM.csv",header=0)
+datastats= data.iloc[:,0:2]
+datastats["Normoxic_Average"]=(data.iloc[:,5:17].sum(axis=1)/12)
+#datastats["24hAnoxic_Average"]=(data.iloc[:,33:45].sum(axis=1)/data.iloc[:,82:94].sum(axis=1))*100
+datastats["24hAnoxic_Average"]=(data.iloc[:,17:28].sum(axis=1)/11)
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['24hAnoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+datastats.to_csv('/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/NormoxiaV24hAnoxia.csv', index=False)
+
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Version 2 Calculation for Protein Abundance for WS40NEhPTM.csv",header=0)
+datastats= data.iloc[:,0:2]
+datastats["Normoxic_Average"]=(data.iloc[:,5:17].sum(axis=1)/12)
+#datastats["24hAnoxic_Average"]=(data.iloc[:,33:45].sum(axis=1)/data.iloc[:,82:94].sum(axis=1))*100
+datastats["4dAnoxic_Average"]=(data.iloc[:,28:39].sum(axis=1)/11)
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['4dAnoxic_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+datastats.to_csv('/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/NormoxiaV4dAnoxia.csv', index=False)
+
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Version 2 Calculation for Protein Abundance for WS40NEhPTM.csv",header=0)
+datastats= data.iloc[:,0:2]
+datastats["Normoxic_Average"]=(data.iloc[:,5:17].sum(axis=1)/12)
+#datastats["24hAnoxic_Average"]=(data.iloc[:,33:45].sum(axis=1)/data.iloc[:,82:94].sum(axis=1))*100
+datastats["Recovery_Average"]=(data.iloc[:,39:51].sum(axis=1)/12)
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['Recovery_Average'] / (datastats['Normoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+datastats.to_csv('/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/NormoxiaVRecovery.csv', index=False)
+
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Version 2 Calculation for Protein Abundance for WS40NEhPTM.csv",header=0)
+datastats= data.iloc[:,0:2]
+datastats["4dAnoxic_Average"]=(data.iloc[:,28:39].sum(axis=1)/11)
+#datastats["24hAnoxic_Average"]=(data.iloc[:,33:45].sum(axis=1)/data.iloc[:,82:94].sum(axis=1))*100
+datastats["Recovery_Average"]=(data.iloc[:,39:51].sum(axis=1)/12)
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['Recovery_Average'] / (datastats['4dAnoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+datastats.to_csv('/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/4dAnoxicVRecovery.csv', index=False)
+
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Version 2 Calculation for Protein Abundance for WS40NEhPTM.csv",header=0)
+datastats= data.iloc[:,0:2]
+datastats["24hAnoxic_Average"]=(data.iloc[:,17:28].sum(axis=1)/11)
+#datastats["24hAnoxic_Average"]=(data.iloc[:,33:45].sum(axis=1)/data.iloc[:,82:94].sum(axis=1))*100
+datastats["Recovery_Average"]=(data.iloc[:,39:51].sum(axis=1)/12)
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['Recovery_Average'] / (datastats['24hAnoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+datastats.to_csv('/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/24hAnoxiaVRecovery.csv', index=False)
+
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Version 2 Calculation for Protein Abundance for WS40NEhPTM.csv",header=0)
+datastats= data.iloc[:,0:2]
+datastats["24hAnoxic_Average"]=(data.iloc[:,17:28].sum(axis=1)/11)
+#datastats["24hAnoxic_Average"]=(data.iloc[:,33:45].sum(axis=1)/data.iloc[:,82:94].sum(axis=1))*100
+datastats["4dAnoxic_Average"]=(data.iloc[:,28:39].sum(axis=1)/11)
+datastats=datastats.replace(np.inf, 0)
+datastats['log2FC'] = np.log2(datastats['4dAnoxic_Average'] / (datastats['24hAnoxic_Average']+.0000001)) #.0000001 added to remove zeroes
+datastats=datastats.replace(-np.inf, 0)
+datastats.to_csv('/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/24hAnoxiaV4dAnoxia.csv', index=False)
+
+data = read_csv("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Version 2 Calculation for Protein Abundance for WS40NEhPTM.csv",header=0)
+datastats= data.iloc[:,0:2]
+datastats=pd.concat([datastats, data.iloc[:,5:51].apply(np.log2) ], axis=1, join="inner")
+datastats=datastats.replace(-np.inf, 0)
+datastats.to_csv('/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Proteinlog2.csv', index=False) 

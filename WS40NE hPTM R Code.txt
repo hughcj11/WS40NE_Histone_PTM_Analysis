@@ -41,7 +41,7 @@ library(cluster)
 library(factoextra)
 library(stringr)
 library(ggforce)
-
+library (data.table)
 
 
 # Importing Data
@@ -8896,3 +8896,355 @@ print(Volcano_Plot_RecoveryV4DAnoxia_H1.0B)
 panel_volcano_plot_Dimethylcompile <- plot_grid(Volcano_Plot_NormoxicV24HAnoxia_H1.0B, Volcano_Plot_NormoxicV4DAnoxia_H1.0B, Volcano_Plot_NormoxicVRecovery_H1.0B, Volcano_Plot_D4V24hAnoxia_H1.0B, Volcano_Plot_RecoveryV24hAnoxia_H1.0B, Volcano_Plot_RecoveryV4DAnoxia_H1.0B, ncol=1, nrow = 6, labels = c('A', 'B', 'C', 'D', 'E', 'F'), label_size = 12)
 
 panel_volcano_plot_Dimethylcompile
+
+
+
+
+
+
+
+
+#### Looking at significance for all hPTMs (not histone specific)
+
+NormoxicVRecovery$`Adjusted pvalue` <- as.numeric(NormoxicVRecovery$`corrected_p_values`)
+NormoxicVRecovery <- NormoxicVRecovery %>% 
+  filter(Log2FC != 0)
+
+NormoxicVRecovery_Statistics <- NormoxicVRecovery %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"))
+
+
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicVRecovery_Statistics$Key <- factor(NormoxicVRecovery_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicVRecovery_H1.0B <- ggplot(data=NormoxicVRecovery_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano, limits=order) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicVRecovery_H1.0B)
+
+
+### Normoxic vs 4 Days Anoxia
+
+NormoxicV4DAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV4DAnoxia$`corrected_p_values`)
+NormoxicV4DAnoxia <- NormoxicV4DAnoxia %>% 
+  filter(Log2FC != 0)
+
+NormoxicV4DAnoxia_Statistics <- NormoxicV4DAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) 
+  
+
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicV4DAnoxia_Statistics$Key <- factor(NormoxicV4DAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicV4DAnoxia_H1.0B <- ggplot(data=NormoxicV4DAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano, limits=order) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicV4DAnoxia_H1.0B)
+
+
+
+### Normoxic vs 24hr Anoxia
+
+
+NormoxicV24HAnoxia$`Adjusted pvalue` <- as.numeric(NormoxicV24HAnoxia$`corrected_p_values`)
+NormoxicV24HAnoxia <- NormoxicV24HAnoxia %>% 
+  filter(Log2FC != 0)
+
+NormoxicV24HAnoxia_Statistics <- NormoxicV24HAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) 
+
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+NormoxicV24HAnoxia_Statistics$Key <- factor(NormoxicV24HAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_NormoxicV24HAnoxia_H1.0B <- ggplot(data=NormoxicV24HAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano, limits=order) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_NormoxicV24HAnoxia_H1.0B)
+
+#################4Danoxia vs 24h anoxia
+D4V24hAnoxia $`Adjusted pvalue` <- as.numeric(D4V24hAnoxia$`corrected_p_values`)
+D4V24hAnoxia <- D4V24hAnoxia %>% 
+  filter(Log2FC != 0)
+
+D4V24hAnoxia_Statistics <- D4V24hAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) 
+
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+D4V24hAnoxia_Statistics$Key <- factor(D4V24hAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_D4V24hAnoxia_H1.0B <- ggplot(data= D4V24hAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano, limits=order) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_D4V24hAnoxia_H1.0B)
+
+################24hanoxia vs Recovery
+RecoveryV24hAnoxia$`Adjusted pvalue` <- as.numeric(RecoveryV24hAnoxia$`corrected_p_values`)
+RecoveryV24hAnoxia <- RecoveryV24hAnoxia %>% 
+  filter(Log2FC != 0)
+
+RecoveryV24hAnoxia_Statistics <- RecoveryV24hAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) 
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+RecoveryV24hAnoxia_Statistics$Key <- factor(RecoveryV24hAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_RecoveryV24hAnoxia_H1.0B <- ggplot(data=RecoveryV24hAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano, limits=order) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_RecoveryV24hAnoxia_H1.0B)
+
+#################4Danoxia vs Recovery
+RecoveryV4DAnoxia$`Adjusted pvalue` <- as.numeric(RecoveryV4DAnoxia$`corrected_p_values`)
+RecoveryV4DAnoxia <- RecoveryV4DAnoxia %>% 
+  filter(Log2FC != 0)
+
+RecoveryV4DAnoxia_Statistics <- RecoveryV4DAnoxia %>% 
+  mutate(Key = case_when(
+    Log2FC > 0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` < 0.05 ~ "Adjusted p-value & Log2FC",
+    Log2FC > -0.6 & Log2FC < 0.6 & `Adjusted pvalue` <0.05 ~ "Adjusted p-value",
+    Log2FC > 0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    Log2FC < -0.6 & `Adjusted pvalue` > 0.05 ~ "Log2FC",
+    TRUE ~ "Nonsignificant"
+  )) 
+ 	
+
+order <- c("Adjusted p-value & Log2FC", "Adjusted p-value", "Log2FC", "Nonsignificant")
+
+RecoveryV4DAnoxia_Statistics$Key <- factor(RecoveryV4DAnoxia_Statistics$Key, levels= order )
+
+Volcano_Plot_RecoveryV4DAnoxia_H1.0B <- ggplot(data=RecoveryV4DAnoxia_Statistics, aes(x=Log2FC, y=-log10(`Adjusted pvalue`), col=Key)) +
+  geom_point(alpha=0.7) +
+  theme_classic() +
+  scale_color_manual(values=colors_volcano, limits=order) +
+  geom_vline(xintercept=c(-0.6, 0.6), col="black", linetype = "longdash") +
+  geom_hline(yintercept=-log10(0.05), col="black", linetype = "longdash") +
+  theme(legend.position="none") +
+  xlab(expression("Log"[2]*" Fold Change")) +
+  ylab(expression("-Log"[10]*"(p"[Adj.]*")"))
+
+print(Volcano_Plot_RecoveryV4DAnoxia_H1.0B)
+
+panel_volcano_plot_Totalcompile <- plot_grid(Volcano_Plot_NormoxicV24HAnoxia_H1.0B, Volcano_Plot_NormoxicV4DAnoxia_H1.0B, Volcano_Plot_NormoxicVRecovery_H1.0B, Volcano_Plot_D4V24hAnoxia_H1.0B, Volcano_Plot_RecoveryV24hAnoxia_H1.0B, Volcano_Plot_RecoveryV4DAnoxia_H1.0B, ncol=1, nrow = 6, labels = c('A', 'B', 'C', 'D', 'E', 'F'), label_size = 12)
+
+panel_volcano_plot_Totalcompile
+
+
+
+#Checking to see if data is normalized
+
+scaledraw_counts <- fread("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Relative_Abundance.csv", sep=',', header=TRUE, na.strings=c("", NA))
+
+scaledraw_counts %>% na.omit()
+
+scaledraw_counts<-as.data.frame(scaledraw_counts)
+
+
+hptms<-as.vector(scaledraw_counts$hPTM_ID)
+
+
+
+row.names(scaledraw_counts) <- hptms
+
+scaledraw_counts = scaledraw_counts[c(9:50)]
+
+
+
+sample_info <- fread('/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Meta Data.csv', sep=',', header=TRUE)
+
+
+
+count.mat <- as.matrix(scaledraw_counts)
+
+
+
+df_raw <- melt(count.mat, id = colnames(count.mat))
+
+names(df_raw)[1:2]<- c("Gene", "Sample")
+
+p<- ggplot(df_raw, aes(x=value, color=Sample))
+
+p<-p + geom_density() 
+
+p<-p + ylab("Density") + xlab("log2(counts)")
+
+p<-p + theme_bw()
+
+p<-p + theme(title = element_text(size=20))
+
+print(p)
+
+#density code for relative abundance means
+df_mean<- fread("/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Full_Relative_Abundance.csv", sep=',', header=TRUE, na.strings=c("", NA))
+
+df_mean = df_mean[c(9:50)]
+
+df_mean<-data.frame(GeneID=row.names(scaledraw_counts))
+df_mean$mean <- rowMeans(scaledraw_counts, na.rm=TRUE)
+df_mean
+
+p<- ggplot(df_mean, aes(x=mean))
+p<-p + geom_density() 
+p<-p + ylab("Density") + xlab("mean(counts)")
+p<-p + theme_bw()
+p<-p + theme(title = element_text(size=20))
+print(p)
+
+#qq plot
+ggplot(df_mean, aes(sample=GeneID))+stat_qq()+theme_bw()
+p<-qplot(sample = mpg, data = mtcars, color=cyl)+theme_bw()
+p + theme(legend.position="bottom")
+
+
+
+
+
+
+
+
+
+#Checking to see if protein abundance data is normalized
+
+scaledraw_counts <- fread("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Proteinlog2.csv", sep=',', header=TRUE, na.strings=c("", NA))
+
+scaledraw_counts %>% na.omit()
+
+scaledraw_counts<-as.data.frame(scaledraw_counts)
+
+
+Protein_Name<-as.vector(scaledraw_counts$Protein_Name)
+
+
+
+row.names(scaledraw_counts) <- Protein_Name
+
+scaledraw_counts = scaledraw_counts[c(3:47)]
+
+
+
+sample_info <- fread('/Users/chelseahughes/Desktop/Histone Analysis/Calculations for WS40NE Samples/Meta Data.csv', sep=',', header=TRUE)
+
+
+
+count.mat <- as.matrix(scaledraw_counts)
+
+
+
+df_raw <- melt(count.mat, id = colnames(count.mat))
+
+names(df_raw)[1:2]<- c("Gene", "Sample")
+
+p<- ggplot(df_raw, aes(x=value, color=Sample))
+
+p<-p + geom_density() 
+
+p<-p + ylab("Density") + xlab("log2(counts)")
+
+p<-p + theme_bw()
+
+p<-p + theme(title = element_text(size=20))
+
+print(p)
+
+#density code for relative abundance means
+df_mean<- fread("/Users/chelseahughes/Desktop/Histone Analysis/WS40NE Protein Abundance/Proteinlog2.csv", sep=',', header=TRUE, na.strings=c("", NA))
+
+df_mean = df_mean[c(3:47)]
+
+df_mean<-data.frame(GeneID=row.names(scaledraw_counts))
+df_mean$mean <- rowMeans(scaledraw_counts, na.rm=TRUE)
+df_mean
+
+p<- ggplot(df_mean, aes(x=mean))
+p<-p + geom_density() 
+p<-p + ylab("Density") + xlab("mean(counts)")
+p<-p + theme_bw()
+p<-p + theme(title = element_text(size=20))
+print(p)
+
+#qq plot
+ggplot(df_mean, aes(sample=GeneID))+stat_qq()+theme_bw()
+p<-qplot(sample = mpg, data = mtcars, color=cyl)+theme_bw()
+p + theme(legend.position="bottom")
+
+
+
+} 
